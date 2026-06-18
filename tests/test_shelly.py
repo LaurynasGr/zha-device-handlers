@@ -9,6 +9,7 @@ from zigpy.zcl import ClusterType, foundation
 from zigpy.zcl.clusters.general import Basic
 from zigpy.zcl.foundation import ZCLAttributeAccess
 
+import zhaquirks
 from zhaquirks.shelly.wifi import (
     SHELLY_MANUFACTURER_CODE,
     SHELLY_WIFI_SETUP_CLUSTER_ID,
@@ -19,6 +20,7 @@ from zhaquirks.shelly.wifi import (
     ShellyWiFiSetupCluster,
 )
 
+zhaquirks.setup()
 
 def _attribute_report_data(
     attribute: foundation.ZCLAttributeDef, value: object
@@ -55,6 +57,12 @@ def test_shelly_wifi_setup_cluster_replaced(zigpy_device_from_v2_quirk, model) -
             SHELLY_WIFI_SETUP_ENDPOINT_ID: {
                 SHELLY_WIFI_SETUP_CLUSTER_ID: ClusterType.Server,
             }
+        },
+        endpoint_profiles={
+            SHELLY_WIFI_SETUP_ENDPOINT_ID: (
+                SHELLY_WIFI_SETUP_PROFILE_ID,
+                SHELLY_WIFI_SETUP_DEVICE_TYPE,
+            )
         },
     )
 
@@ -140,6 +148,12 @@ def test_shelly_wifi_standard_profile_packet_delegated(
             SHELLY_WIFI_SETUP_ENDPOINT_ID: {
                 SHELLY_WIFI_SETUP_CLUSTER_ID: ClusterType.Server,
             }
+        },
+        endpoint_profiles={
+            SHELLY_WIFI_SETUP_ENDPOINT_ID: (
+                SHELLY_WIFI_SETUP_PROFILE_ID,
+                SHELLY_WIFI_SETUP_DEVICE_TYPE,
+            )
         },
     )
 

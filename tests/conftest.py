@@ -171,6 +171,7 @@ def zigpy_device_from_v2_quirk(MockAppController, ieee_mock):
         model: str,
         endpoint_ids: list[int] = [1],
         cluster_ids: dict[int, dict[int, ClusterType]] = {},
+        endpoint_profiles: dict[int, tuple[int, int]] = {},
         ieee=None,
         nwk=zigpy.types.NWK(0x1234),
         apply_quirk=True,
@@ -185,6 +186,12 @@ def zigpy_device_from_v2_quirk(MockAppController, ieee_mock):
             and their cluster ids and types to be added to the device.
             More advanced version of endpoint_ids argument.
             Example: `cluster_ids={2: {OnOff.cluster_id: ClusterType.Client}}`
+        :param endpoint_profiles: Optional mapping of endpoint id to a
+            `(profile_id, device_type)` tuple, setting the advertised profile and
+            device type on the raw device endpoint before quirk selection. Endpoints
+            default to an unset (`None`) profile and device type. Useful for devices
+            that expose endpoints on a non-ZHA profile.
+            Example: `endpoint_profiles={239: (0xC001, 0x2001)}`
         :param ieee: IEEE address of the device.
         :param nwk: Network address of the device.
         :param apply_quirk: Whether to apply the quirk to the device.
@@ -207,6 +214,10 @@ def zigpy_device_from_v2_quirk(MockAppController, ieee_mock):
             if ep_id == 1:
                 endpoint_clusters[ep_id][Basic.cluster_id] = ClusterType.Server
 
+        # make sure endpoints referenced only via endpoint_profiles are created
+        for ep_id in endpoint_profiles:
+            endpoint_clusters.setdefault(ep_id, {})
+
         # firmware_version_filter reads current_file_version from an OTA client
         # cluster, so add one on ep 1 when a firmware version is requested
         if firmware_version is not None:
@@ -220,6 +231,10 @@ def zigpy_device_from_v2_quirk(MockAppController, ieee_mock):
         # add additional endpoints to the device
         for endpoint_id, clusters in endpoint_clusters.items():
             ep = raw_device.add_endpoint(endpoint_id)
+
+            # set the advertised profile and device type if given for this endpoint
+            if endpoint_id in endpoint_profiles:
+                ep.profile_id, ep.device_type = endpoint_profiles[endpoint_id]
 
             # add custom cluster ids to test device
             for cluster_id, cluster_type in clusters.items():
